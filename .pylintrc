@@ -1,0 +1,12 @@
+[MESSAGES CONTROL]
+disable=logging-format-interpolation,too-many-arguments,invalid-name,no-member,too-many-locals,too-many-statements,too-few-public-methods,not-context-manager,redefined-variable-type,locally-disabled,fixme,unbalanced-tuple-unpacking,redefined-builtin,arguments-differ
+max-line-length=79
+max-attributes=15
+ignored-modules=distutils
+
+[BASIC]
+good-names=i,j,k,x,y,xs,ys,t,ac,ob,acs,obs,p
+
+[SIMILARITIES]
+ignore-imports=yes
+min-similarity-lines=30

@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Custom skeleton ignores
+.env
+data/
+logs/
+.swp
+
 # C extensions
 *.so
 
