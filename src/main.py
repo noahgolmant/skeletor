@@ -1,11 +1,12 @@
 """ Top-level thing to run training procedures """
-from .args import get_parser, parse
-from .train import do_training
+from train import do_training, add_train_args
 
+import argparse
 import os
 import sys
 import shutil
 import yaml
+from dotenv import load_dotenv, find_dotenv
 
 import ray
 ray.rllib = None
@@ -14,33 +15,68 @@ from ray.tune import register_trainable, run_experiments
 import track
 
 
-# Argument parsing
-parser = get_parser()
-parser.add_argument('--log-interval', default=10,
-                    help='frequency (in iters) of logging')
-parser.add_argument('--arch', default='resnet18')
-parser.add_argument('--dataset', default='cifar10')
-args = parse()
+def _add_generic_args(parser):
+    # Generic arguments 
+    parser.add_argument('experimentname', type=str,
+                        help='Name of the experiment to run')
+    # Ray arguments
+    parser.add_argument('--self_host', type=int, default=0,
+                        help='if > 0, create ray host with specified number of GPUs')
+    parser.add_argument('--cpu', action='store_true', help='use cpu only')
+    parser.add_argument('--port', type=int, default=6379, help='ray port')
+    parser.add_argument('--server_port', type=int, default=10000,
+                        help='ray tune port')
+    parser.add_argument('--config', default='', type=str)
+
+    # Hack: add the dotenv ones and we'll plug them in later
+    parser.add_argument('--projectname', default='', type=str)
+    parser.add_argument('--dataroot', default='', type=str)
+    parser.add_argument('--remote', default='', type=str)
+    parser.add_argument('--logroot', default='', type=str)
+
+
+def _append_dotenv_args(args):
+    # Append the environment information if we want it
+    # It's all stored in the path now
+    args.projectname = os.environ.get('projectname')
+    args.dataroot = os.environ.get('dataroot')
+    args.remote = os.environ.get('remote')
+    args.logroot = os.environ.get('logroot')
+
+
+dotenv_path = find_dotenv()
+load_dotenv(dotenv_path)
+parser = argparse.ArgumentParser(description='parser for %s'
+                                 % os.environ.get('projectname'))
+_add_generic_args(parser)
+add_train_args(parser)
+args = parser.parse_args()
+_append_dotenv_args(args)
 
 
 def experiment(args):
-    track_local_dir = os.path.join(args['logroot'], args['experimentname'])
-    track_remote_dir = os.path.join(args['remote'],
-                                    args['projectname'],
-                                    args['experimentname'])
-    with track.trial(track_local_dir, track_remote_dir, param_map=args):
+    track_local_dir = os.path.join(args.logroot, args.experimentname)
+    if args.remote:
+        track_remote_dir = os.path.join(args.remote,
+                                        args.projectname,
+                                        args.experimentname)
+    else:
+        track_remote_dir = None
+    with track.trial(track_local_dir, track_remote_dir, param_map=vars(args)):
         track.debug("Starting trial")
         do_training(args)
 
 
 def compute_resources(args, config):
-    cpu = 1 if args['self_host'] and args['cpu'] else 0
+    cpu = 1 if args.self_host and args.cpu else 0
     # TODO use batch size to fix this
     return {'cpu': cpu, 'gpu': 1 - cpu}
 
 
 def ray_experiment(config, status_reporter):
     # TODO CONVERT TO ARGS DICT HERE
+    import pdb
+    pdb.set_trace()
     args = config
     status_reporter(timesteps_total=0, done=0)
     experiment(args)
@@ -48,14 +84,14 @@ def ray_experiment(config, status_reporter):
 
 
 def launch_ray_experiments(args):
-    if args['self_host']:
-        if args['cpu']:
-            ray.init(num_cpus=args['self_host'])
+    if args.self_host:
+        if args.cpu:
+            ray.init(num_cpus=args.self_host)
         else:
-            ray.init(num_gpus=args['self_host'])
+            ray.init(num_gpus=args.self_host)
     else:
         ip = ray.services.get_node_ip_address()
-        ray.init(redis_address=(ip + ':' + args['port']))
+        ray.init(redis_address=(ip + ':' + args.port))
     register_trainable('ray_experiment', ray_experiment)
 
     with open(args['config']) as f:
@@ -79,13 +115,13 @@ def launch_ray_experiments(args):
                         server_port=int(args['server_port']),
                         with_server=True)
     except ray.tune.error.TuneError as e:
-        print('swalling tune error: {}'.format(e), file=sys.stderr)
+        print('swalling tune error: {}'.format(e))
 
 
 def cleanup_ray_experiments(args):
-    track_local_dir = os.path.join(args['logroot'], args['experimentname'])
+    track_local_dir = os.path.join(args.logroot, args.experimentname)
     for experiment in os.listdir('raydata'):
-        if experiment != args['experimentname']:
+        if experiment != args.experimentname:
             continue
         experiment_dir = os.path.join('raydata', experiment)
         for runname in os.listdir(experiment_dir):
@@ -107,7 +143,7 @@ def cleanup_ray_experiments(args):
 
 
 if __name__ == '__main__':
-    if args['onfig']:
+    if args.config:
         print(">>> Using ray to launch experiments from config")
         launch_ray_experiments(args)
         cleanup_ray_experiments(args)

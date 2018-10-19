@@ -12,7 +12,8 @@ install_requires = [
     'ray>=0.4.0',
     'scipy>=1.1.0',
     'python-dotenv',
-    'track'
+    'track',
+    'awscli'
 ]
 
 dependency_links = [
