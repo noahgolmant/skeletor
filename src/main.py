@@ -3,7 +3,6 @@ from train import do_training, add_train_args
 
 import argparse
 import os
-import sys
 import shutil
 import yaml
 from dotenv import load_dotenv, find_dotenv
@@ -27,6 +26,8 @@ def _add_generic_args(parser):
     parser.add_argument('--server_port', type=int, default=10000,
                         help='ray tune port')
     parser.add_argument('--config', default='', type=str)
+    parser.add_argument('--gpus_per_trial', default=1, type=int,
+                        help='number of gpus per trial')
 
     # Hack: add the dotenv ones and we'll plug them in later
     parser.add_argument('--projectname', default='', type=str)
@@ -70,7 +71,7 @@ def experiment(args):
 def compute_resources(args, config):
     cpu = 1 if args.self_host and args.cpu else 0
     # TODO use batch size to fix this
-    return {'cpu': cpu, 'gpu': 1 - cpu}
+    return {'cpu': cpu, 'gpu': args.gpus_per_trial}
 
 
 def ray_experiment(config, status_reporter):
@@ -115,12 +116,17 @@ def launch_ray_experiments(args):
 
 def cleanup_ray_experiments(args):
     track_local_dir = os.path.join(args.logroot, args.experimentname)
+    os.makedirs(track_local_dir, exist_ok=True)
+    import pdb
+    pdb.set_trace()
     for experiment in os.listdir('raydata'):
         if experiment != args.experimentname:
             continue
         experiment_dir = os.path.join('raydata', experiment)
         for runname in os.listdir(experiment_dir):
-            rundir = os.path.join(experiment_dir, runname)
+            rundir = os.path.join(experiment_dir, runname,
+                                  'logs',
+                                  args.experimentname)
             for f in os.listdir(rundir):
                 cur = os.path.join(rundir, f)
                 new_dst = os.path.join(track_local_dir, f)
@@ -129,7 +135,7 @@ def cleanup_ray_experiments(args):
                     continue
                 if os.path.isdir(new_dst):
                     ray_trial_dir = os.path.join(rundir, f)
-                    for trial_data in os.path.listdir(ray_trial_dir):
+                    for trial_data in os.listdir(ray_trial_dir):
                         ray_trial_data = os.path.join(ray_trial_dir, trial_data)
                         new_trial_data = os.path.join(new_dst, trial_data)
                         shutil.move(ray_trial_data, new_trial_data)
