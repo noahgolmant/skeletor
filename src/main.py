@@ -20,7 +20,7 @@ def _add_generic_args(parser):
     parser.add_argument('experimentname', type=str,
                         help='Name of the experiment to run')
     # Ray arguments
-    parser.add_argument('--self_host', type=int, default=0,
+    parser.add_argument('--self_host', type=int, default=1,
                         help='if > 0, create ray host with specified number of GPUs')
     parser.add_argument('--cpu', action='store_true', help='use cpu only')
     parser.add_argument('--port', type=int, default=6379, help='ray port')
@@ -74,32 +74,27 @@ def compute_resources(args, config):
 
 
 def ray_experiment(config, status_reporter):
-    # TODO CONVERT TO ARGS DICT HERE
-    import pdb
-    pdb.set_trace()
-    args = config
+    global args
+    for k, v in config.items():
+        setattr(args, k, v)
     status_reporter(timesteps_total=0, done=0)
     experiment(args)
     status_reporter(timesteps_total=1, done=1)
 
 
 def launch_ray_experiments(args):
-    if args.self_host:
-        if args.cpu:
-            ray.init(num_cpus=args.self_host)
-        else:
-            ray.init(num_gpus=args.self_host)
+    if args.cpu:
+        ray.init(num_cpus=args.self_host)
     else:
-        ip = ray.services.get_node_ip_address()
-        ray.init(redis_address=(ip + ':' + str(args.port)))
+        ray.init(num_gpus=args.self_host)
     register_trainable('ray_experiment', ray_experiment)
 
-    with open(args['config']) as f:
+    with open(args.config) as f:
         config = yaml.load(f)
 
     resources = compute_resources(args, config)
     experiment_setting = {
-        args['experimentname']: {
+        args.experimentname: {
             'run': 'ray_experiment',
             'trial_resources': resources,
             'stop': {
@@ -112,7 +107,7 @@ def launch_ray_experiments(args):
 
     try:
         run_experiments(experiment_setting,
-                        server_port=int(args['server_port']),
+                        server_port=int(args.server_port),
                         with_server=True)
     except ray.tune.error.TuneError as e:
         print('swalling tune error: {}'.format(e))
