@@ -91,7 +91,7 @@ def launch_ray_experiments(args):
             ray.init(num_gpus=args.self_host)
     else:
         ip = ray.services.get_node_ip_address()
-        ray.init(redis_address=(ip + ':' + args.port))
+        ray.init(redis_address=(ip + ':' + str(args.port)))
     register_trainable('ray_experiment', ray_experiment)
 
     with open(args['config']) as f:

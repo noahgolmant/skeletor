@@ -7,7 +7,7 @@ from optimizers import build_optimizer
 
 def add_train_args(parser):
     # Main arguments go here
-    parser.add_argument('--log-interval', default=10,
+    parser.add_argument('--log_interval', default=10,
                         help='frequency (in iters) of logging')
     parser.add_argument('--arch', default='resnet50')
     parser.add_argument('--dataset', default='cifar10')
