@@ -2,6 +2,8 @@
 
 Skeletor attempts to provide a lightweight wrapper for research code with two goals: (1) make it easy to track experiment results and data for later analysis and (2) orchestrate many experiments in parallel without worrying too much. The first goal is satisfied using [track](https://github.com/richardliaw/track) for logging experiment metrics. You can get the experiment results in a nice Pandas DataFrame with it, it logs in a nice format, and it can back up to S3. The second goal is satisfied using [ray](https://github.com/ray-project/ray) to parallelize multi-gpu grid-searched experiment configurations.
 
+99% of the work is being done by track and ray.
+
 I added boilerplate model, architecture, and optimizer construction functions for some basic PyTorch setups. I will try to add more as time goes on, but I don't plan on adding TensorFlow things anytime soon.
 
 ## Setup
