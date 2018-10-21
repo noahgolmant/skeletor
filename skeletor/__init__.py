@@ -1,4 +1,4 @@
 """Top-level structure for skeletor """
-name = 'skeletor'
+name = 'skeletor-ml'
 
 from .launcher import supply_args, execute

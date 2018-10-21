@@ -9,7 +9,7 @@ I added boilerplate model, architecture, and optimizer construction functions fo
 ## Setup
 
 Necessary packages are listed in `setup.py`.
-Just run `pip install skeletor` to get started.
+Just run `pip install skeletor-ml` to get started.
 
 ## Basic Usage
 

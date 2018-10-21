@@ -15,7 +15,7 @@ dependency_links = [
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setuptools.setup(name="skeletor",
+setuptools.setup(name="skeletor-ml",
                  version="0.1",
                  author="Noah Golmant",
                  author_email="noah.golmant@gmail.com",
