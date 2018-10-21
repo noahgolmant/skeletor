@@ -60,6 +60,8 @@ I can test out all of these learning rates at the same time by running:
 
 `CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py config.yaml --self_host=4 resnet_cifar`
 
+If I have more than 4 configurations, ray will handle job scheduling from the queue.
+
 Logs (`track` records) will be stored in `<args.logroot>/<args.experimentname>`.
 See the `track` docs for how to access these records as DataFrames.
 
