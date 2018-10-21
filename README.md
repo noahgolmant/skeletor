@@ -1,6 +1,6 @@
 # Skeletor
 
-Skeletor attempts to provide a lightweight wrapper for research code with two goals: (1) make it easy to track experiment results and data for later analysis and (2) orchestrate many experiments in parallel without worrying too much. The first goal is satisfied using [track](https://github.com/richardliaw/track) for logging experiment metrics. You can get the experiment results in a nice Pandas DataFrame with it, it logs in a nice format, and it can back up to S3. The second goal is satisfied using [ray](https://github.com/ray-project/ray) to parallelize multi-gpu grid-searched experiment configurations.
+Skeletor attempts to provide a lightweight wrapper for research code with two goals: (1) make it easy to track experiment results and data for later analysis and (2) orchestrate many experiments in parallel without worrying too much. The first goal is satisfied using [track](https://github.com/richardliaw/track) for logging experiment metrics. You can get the experiment results in a nice Pandas DataFrame with it, it logs in a nice format, and it can back up to S3. The second goal is satisfied using [ray](https://github.com/ray-project/ray) to parallelize multi-gpu grid searches over various experiment configurations. This is an improvement over some other setups because it allows us to use a proper distributed execution framework to handle trial scheduling.
 
 99% of the work is being done by track and ray.
 
