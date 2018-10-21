@@ -40,3 +40,10 @@ I tried to erase boilerplate by adding basic experiment utilities as well as var
 ## Things to do
 
 Add capability to register custom models, dataset loaders, and optimizers with the `build_model`, `build_dataset`, and `build_optimizer` functions.
+
+Sometimes `track` doesn't install correctly from the `setup.py`. If this happens, just run `pip install --upgrade git+https://github.com/richardliaw/track.git@master#egg=track` first.
+`
+
+
+
+[...](https://www.youtube.com/watch?v=g20_8-TPyTQ)

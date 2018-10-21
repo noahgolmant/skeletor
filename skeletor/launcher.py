@@ -2,13 +2,11 @@
 This file orchestrates experiment launching
 
 """
-from train import do_training, add_train_args
-
 import argparse
 import os
 import shutil
+import sys
 import yaml
-from dotenv import load_dotenv, find_dotenv
 
 import ray
 ray.rllib = None
@@ -187,4 +185,4 @@ def execute(experiment_fn):
         _launch_ray_experiments(experiment_fn, args)
         _cleanup_ray_experiments(args)
     else:
-        _experiment(args)
+        _experiment(experiment_fn, args)
