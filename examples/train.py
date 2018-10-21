@@ -2,13 +2,14 @@
 import os
 import time
 import torch
+
+import skeletor
+from skeletor.dataset import build_dataset, num_classes
+from skeletor.models import build_model
+from skeletor.optimizers import build_optimizer
+from skeletor.utils import AverageMeter, accuracy, progress_bar
+
 import track
-
-from dataset import build_dataset, num_classes
-from models import build_model
-from optimizers import build_optimizer
-from utils import AverageMeter, accuracy, progress_bar
-
 
 def add_train_args(parser):
     # Main arguments go here
@@ -129,7 +130,6 @@ def test(testloader, model, criterion, epoch):
 
 
 def do_training(args):
-
     trainloader, testloader = build_dataset(args.dataset,
                                             dataroot=args.dataroot,
                                             batch_size=args.batch_size,
@@ -163,3 +163,8 @@ def do_training(args):
             best_fname = os.path.join(track.trial_dir(), "best.ckpt")
             track.debug("New best score! Saving model")
             torch.save(model, best_fname)
+
+
+if __name__ == '__main__':
+    skeletor.supply_args(add_train_args)
+    skeletor.execute(do_training)

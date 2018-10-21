@@ -1,4 +1,4 @@
-"""setup.py for PROJECTNAME"""
+"""setup.py for skeletor """
 
 from setuptools import setup
 
@@ -20,6 +20,6 @@ dependency_links = [
     'git+https://github.com/richardliaw/track/tarball/master#egg=track'
 ]
 
-setup(name="PROJECTNAME", author="Noah Golmant",
+setup(name="skeletor", author="noahgolmant",
       install_requires=install_requires,
       dependency_links=dependency_links)
