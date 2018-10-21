@@ -15,12 +15,13 @@ Just run `pip install skeletor-ml` to get started.
 
 All you really have to do is supply a `supply_args(parser)` function and an `experiment_fn(parsed_args)` function. The first one takes in an `ArgumentParser` object so you can supply your own arguments to the project. The second one will take in the parsed arguments and run your experiment.
 
-A basic example `train.py` might look like:
+You can use `track` to log statistics during training. A basic example `train.py` might look like:
 
 ```
 import skeletor
 from skeletor.models import build_model
 from skeletor.optimizers import build_optimizer
+import track
 
 def add_args(parser):
     parser.add_argument('--arch', default='resnet50')
@@ -28,16 +29,22 @@ def add_args(parser):
 
 def train(epoch):
     ...
+    return avg_train_loss
 
 def test(epoch):
     ...
+    return avg_test_loss
 
 def experiment(args):
     model = build_model(args.arch, num_classes=10)
     opt = build_optimizer('SGD', lr=args.lr)
     for epoch in range(200):
-        train(epoch)
-        test(epoch)
+        track.debug("Starting epoch %d" % epoch)
+        train_loss = train(epoch)
+        test_loss = test(epoch)
+        track.metric(iteration=epoch,
+                     train_loss=train_loss,
+                     test_loss=test_loss)
 
 skeletor.supply_args(add_args)
 skeletor.execute(experiment)
