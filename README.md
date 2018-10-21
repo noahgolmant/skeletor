@@ -81,6 +81,8 @@ You can find an example of running a grid search for training a residual network
 
 I added a utility in `skeletor.proc` for converting all `track` trial records for an experiment into a single Pandas DataFrame. It can also pickle it.
 
+That means if I run an experiment like above called `resnet_cifar`, I can access all of the results for all the trials as a single DataFrame by calling `skeletor.proc.track.df('resnet_cifar')`.
+
 ## Help me out
 
 I tried to erase boilerplate by adding basic experiment utilities as well as various models and dataloaders. I haven't added much yet. Feel free to port over other architectures and datasets into the repo via PRs.
