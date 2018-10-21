@@ -15,7 +15,7 @@ Just run `pip install skeletor-ml` to get started.
 
 All you really have to do is supply a `supply_args(parser)` function and an `experiment_fn(parsed_args)` function. The first one takes in an `ArgumentParser` object so you can supply your own arguments to the project. The second one will take in the parsed arguments and run your experiment.
 
-A basic example might look like:
+A basic example `train.py` might look like:
 
 ```
 import skeletor
@@ -45,14 +45,23 @@ skeletor.execute(experiment)
 
 To launch a single experiment, you can do something like
 
-`CUDA_VISIBLE_DEVICES=0 python train.py <my args> <experimentname>`
+`CUDA_VISIBLE_DEVICES=0 python train.py --arch resnet50 --lr .1 resnet_cifar`
 
 
-To launch experiments in parallel, you can do something like
+The same code can be used to launch several experiments in parallel. Suppose I have a config called `config.yaml` that looks like:
 
-`CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py <config.yaml> --self_host=4 <experimentname>`
+```
+arch: resnet50
+lr:
+  grid_search: [.001, .01, .1, 1.0]
+```
+
+I can test out all of these learning rates at the same time by running:
+
+`CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py config.yaml --self_host=4 resnet_cifar`
 
 Logs (`track` records) will be stored in `<args.logroot>/<args.experimentname>`.
+See the `track` docs for how to access these records as DataFrames.
 
 ## Examples
 
