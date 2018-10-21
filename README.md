@@ -1,48 +1,42 @@
-# Skeleton
+# Skeletor
 
-This is a skeleton repository for training different pytorch models on different datasets. It uses [track](https://github.com/richardliaw/track) for logging experiment metrics and [ray](https://github.com/ray-project/ray) to parallelize multi-gpu experiments via a grid search.
+Skeletor attempts to provide a lightweight wrapper for research code with two goals: (1) make it easy to track experiment results and data for later analysis and (2) orchestrate many experiments in parallel without worrying too much. The first goal is satisfied using [track](https://github.com/richardliaw/track) for logging experiment metrics. You can get the experiment results in a nice Pandas DataFrame with it, it logs in a nice format, and it can back up to S3. The second goal is satisfied using [ray](https://github.com/ray-project/ray) to parallelize multi-gpu grid-searched experiment configurations.
+
+I added boilerplate model, architecture, and optimizer construction functions for some basic PyTorch setups. I will try to add more as time goes on, but I don't plan on adding TensorFlow things anytime soon.
 
 ## Setup
 
-This setup requires a linux x64 box.
 Necessary packages are listed in `setup.py`.
+Just run `pip install skeletor` to get started.
 
-1. Fill out the basic information required in the `.env`.
-2. Fill out the setup info by running `scripts/setup.sh`
-3. Create a conda environment for this project:
-    a. `conda create -y -n <proj-name> python=3.5`
-    b. `conda activate <proj-name>`
-4. Install any machine-specific dependencies
-    a. `./scripts/install.sh`
-5. Install the requirements and mark this as a local package.
-    a. `pip install --no-cache-dir --editable .`
+## Basic Usage
 
-## Scripts
+All you really have to do is supply a `supply_args(parser)` function and an `experiment_fn(parsed_args)` function. The first one takes in an `ArgumentParser` object so you can supply your own arguments to the project. The second one will take in the parsed arguments and run your experiment.
 
-All scripts are available in `scripts/`, and should be run from the repo root.
+To launch a single experiment, you can do something like
 
-| script | purpose |
-| ------ | ------- |
-| `lint.sh` | invokes `pylint` with approppriate flags for repo |
-| `tests.sh` | runs all tests |
-| `install.sh` | use python and cuda info to install packages (e.g. pytorch) |
-
-## Running Experiments
-
-### Basic Usage
-
-For running a single experiment, simply specify the flags defined in the `add_train_args` function in `src/train.py`. The last argument should be a name for the experiment. For example, the following will begin to train ResNet50 on CIFAR-10:
-
-`CUDA_VISIBLE_DEVICES=0 python src/main.py --arch resnet50 --dataset cifar10 --lr .1 resnet_cifar`
-
-### Parallelizing Experiments
-
-You can schedule a set of experiments by defining a YAML config that determines all the experiment settings you want to try. An example of this is found in `configs/cifar10.yaml`. This follows the `ray.tune` setup for YAML parsing. You can launch these settings in parallel like so:
+`CUDA_VISIBLE_DEVICES=0 python train.py <my args> <experimentname>`
 
 
-`CUDA_VISIBLE_DEVICES=0,1,2,3 python src/main.py --self_host=4 --config configs/cifar10.yaml resnet_cifar`
+To launch experiments in parallel, you can do something like
 
-## Analyzing Experiments
+`CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py <config.yaml> --self_host=4 <experimentname>`
 
-You can run postprocessing routines using code in `src/proc`. For example, `src/proc/track.py` will produce a pickled DataFrame containing all results for the specified experiment name. You can do visualizations by creating notebooks in `plotting/`.
+Logs (`track` records) will be stored in `<args.logroot>/<args.experimentname>`.
 
+## Examples
+
+You can find an example of running a grid search for training a residual network on CIFAR-10 in PyTorch in `examples/train.py`.
+
+
+## Getting experiment results
+
+I added a utility in `skeletor.proc` for converting all `track` trial records for an experiment into a single Pandas DataFrame. It can also pickle it.
+
+## Help me out
+
+I tried to erase boilerplate by adding basic experiment utilities as well as various models and dataloaders. I haven't added much yet. Feel free to port over other architectures and datasets into the repo via PRs.
+
+## Things to do
+
+Add capability to register custom models, dataset loaders, and optimizers with the `build_model`, `build_dataset`, and `build_optimizer` functions.
