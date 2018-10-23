@@ -2,6 +2,8 @@
 
 import os
 import time
+
+import pandas as pd
 import torch
 import track
 
@@ -175,6 +177,14 @@ def do_training(args):
             torch.save(model, best_fname)
 
 
+def postprocess(proj):
+    df = skeletor.proc.df_from_proj(proj)
+    best_trial = df.ix[df['avg_test_acc'].idxmax()]
+    print("Trial with top accuracy:")
+    print(best_trial)
+
+
 if __name__ == '__main__':
     skeletor.supply_args(add_train_args)
+    skeletor.supply_postprocess(postprocess, save_proj=True)
     skeletor.execute(do_training)

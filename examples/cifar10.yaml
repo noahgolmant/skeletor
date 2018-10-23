@@ -1,7 +1,6 @@
-log_interval: 10
-arch: resnet20
+arch: ResNet18
 dataset: cifar10
 lr: .1
 batch_size:
   grid_search: [64, 128]
-epochs: 1
+epochs: 200
