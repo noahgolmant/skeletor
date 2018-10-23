@@ -42,20 +42,3 @@ def proj(experimentname=None, logroot=None, s3=None,
         proj_dir = os.path.join(logroot, experimentname)
     proj = track.Project(proj_dir, s3)
     return proj
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Create pandas dataframes from track')
-    parser.add_argument('--logroot', default='./logs')
-    parser.add_argument('experimentname', default='resnet_cifar')
-    args = parser.parse_args()
-
-    _proj = proj(args.experimentname, args.logroot)
-    proj_fname = os.path.join(args.logroot, args.experimentname,
-                              args.experimentname + '.pkl')
-    try:
-        with open(proj_fname, 'wb') as f:
-            pickle.dump(_proj, f)
-    except Exception as e:
-        print('swallowing pickle error: {}'.format(e))
-

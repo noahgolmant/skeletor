@@ -65,7 +65,7 @@ lr:
 
 I can test out all of these learning rates at the same time by running:
 
-`CUDA_VISIBLE_DEVICES=0,1 python train.py config.yaml --self_host=4 resnet_cifar`
+`CUDA_VISIBLE_DEVICES=0,1 python train.py config.yaml --self_host=2 resnet_cifar`
 
 Ray will handle scheduling all four jobs on the two devices using a queue.
 
@@ -87,3 +87,4 @@ That means if I run an experiment like above called `resnet_cifar`, I can access
 
 We have active [issues](https://github.com/noahgolmant/skeletor/issues)! Feel free to suggest new improvements or add PRs to contribute.
 
+[...](https://www.youtube.com/watch?v=g20_8-TPyTQ)
