@@ -6,7 +6,6 @@ import argparse
 import os
 import pickle
 import shutil
-import sys
 import yaml
 
 import ray
@@ -14,6 +13,8 @@ ray.rllib = None
 import ray.tune
 from ray.tune import register_trainable, run_experiments
 import track
+
+from .utils import seed_all
 
 # This will hold the arguments for this program. Set in `supply_args`.
 _parser = None
@@ -48,6 +49,7 @@ def _add_default_args(parser):
                         'multi-gpu machine.')
     parser.add_argument('--devices_per_trial', default=1, type=int,
                         help='number of gpus/cpus needed per experiment')
+    # Storage arguments
     parser.add_argument('--dataroot', default='./data', type=str,
                         help='local or absolute path where data is stored '
                         'or is to be downloaded')
@@ -58,6 +60,8 @@ def _add_default_args(parser):
                         help='each directory in the logroot will be an '
                         'experimentname. each such subdirectory contains all'
                         ' track records for the experiment.')
+    parser.add_argument('--seed', default=1, type=int,
+                        help='random seed to supply to numpy, random, torch, etc.')
 
 
 def _experiment(experiment_fn, args):
@@ -65,6 +69,9 @@ def _experiment(experiment_fn, args):
     Launches the track experiment (+/- S3 backup) by calling
     `experiment_fn(args)` where args contains the parsed arguments.
     """
+    # Set up the random seeds!
+    seed_all(args.seed)
+    # Set up track logging, locally + in S3
     track_local_dir = os.path.join(args.logroot, args.experimentname)
     if args.s3:
         track_remote_dir = os.path.join(args.s3,
@@ -72,6 +79,7 @@ def _experiment(experiment_fn, args):
                                         args.experimentname)
     else:
         track_remote_dir = None
+    # Start the trial!
     with track.trial(track_local_dir, track_remote_dir, param_map=vars(args)):
         track.debug("Starting experiment!")
         experiment_fn(args)
