@@ -1,7 +1,16 @@
 """ Top-level directory for all network architectures """
-
-from .cv.resnet import resnet50, resnet20
-from .cv.vgg import vgg16_bn as vgg_16
+from .cv.vgg import *
+from .cv.dpn import *
+from .cv.lenet import *
+from .cv.senet import *
+from .cv.pnasnet import *
+from .cv.densenet import *
+from .cv.googlenet import *
+from .cv.resnet import *
+from .cv.resnext import *
+from .cv.preact_resnet import *
+from .cv.mobilenet import *
+from .cv.mobilenetv2 import *
 
 def build_model(name, **model_params):
     """
@@ -12,4 +21,3 @@ def build_model(name, **model_params):
     assert name in globals().keys(),\
         "%s must be a model imported/defined in models/__init__.py" % name
     return globals()[name](**model_params)
-
