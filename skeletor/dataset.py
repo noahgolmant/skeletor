@@ -44,7 +44,7 @@ def _cifar(is_cifar10, dataroot, batch_size, eval_batch_size,
     else:
         dataloader = datasets.CIFAR100
 
-    datadir = os.path.join(dataroot, 'cifar10')
+    datadir = os.path.join(dataroot, 'cifar10' if is_cifar10 else 'cifar100')
     trainset = dataloader(datadir, train=True, download=True,
                           transform=transform_train)
     trainloader = data.DataLoader(trainset, batch_size=batch_size,

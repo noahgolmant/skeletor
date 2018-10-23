@@ -1,7 +1,9 @@
 """ Main file to orchestrate model training! Most of the work should go here."""
+
 import os
 import time
 import torch
+import track
 
 import skeletor
 from skeletor.dataset import build_dataset, num_classes
@@ -9,20 +11,23 @@ from skeletor.models import build_model
 from skeletor.optimizers import build_optimizer
 from skeletor.utils import AverageMeter, accuracy, progress_bar
 
-import track
 
 def add_train_args(parser):
     # Main arguments go here
-    parser.add_argument('--arch', default='resnet50')
+    parser.add_argument('--arch', default='ResNet18')
     parser.add_argument('--dataset', default='cifar10')
     parser.add_argument('--lr', default=.1, type=float)
     parser.add_argument('--batch_size', default=128, type=int)
     parser.add_argument('--eval_batch_size', default=100, type=int)
     parser.add_argument('--epochs', default=200, type=int)
-    parser.add_argument('--schedule', type=int, nargs='+', default=[150, 225],
+    parser.add_argument('--schedule', type=int, nargs='+', default=[150, 190],
                         help='Decrease learning rate at these epochs.')
     parser.add_argument('--gamma', type=float, default=0.1,
                         help='LR is multiplied by gamma on schedule.')
+    parser.add_argument('--momentum', default=.9, type=float,
+                        help='SGD momentum')
+    parser.add_argument('--weight_decay', default=5e-4, type=float,
+                        help='SGD weight decay')
 
 
 def adjust_learning_rate(epoch, optimizer, lr, schedule, decay):
@@ -51,7 +56,6 @@ def train(trainloader, model, criterion, optimizer, epoch):
         data_time.update(time.time() - end)
 
         inputs, targets = inputs.cuda(), targets.cuda(async=True)
-        inputs, targets = torch.autograd.Variable(inputs), torch.autograd.Variable(targets)
 
         # compute output
         outputs = model(inputs)
@@ -97,32 +101,33 @@ def test(testloader, model, criterion, epoch):
     model.eval()
 
     end = time.time()
-    for batch_idx, (inputs, targets) in enumerate(testloader):
-        # measure data loading time
-        data_time.update(time.time() - end)
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            # measure data loading time
+            data_time.update(time.time() - end)
 
-        inputs, targets = inputs.cuda(), targets.cuda()
-        inputs = torch.autograd.Variable(inputs, volatile=True)
-        targets = torch.autograd.Variable(targets, volatile=True)
+            inputs, targets = inputs.cuda(), targets.cuda()
+            inputs = torch.autograd.Variable(inputs, volatile=True)
+            targets = torch.autograd.Variable(targets, volatile=True)
 
-        # compute output
-        outputs = model(inputs)
-        loss = criterion(outputs, targets)
+            # compute output
+            outputs = model(inputs)
+            loss = criterion(outputs, targets)
 
-        # measure accuracy and record loss
-        prec1, prec5 = accuracy(outputs.data, targets.data, topk=(1, 5))
-        losses.update(loss.item(), inputs.size(0))
-        top1.update(prec1.item(), inputs.size(0))
-        top5.update(prec5.item(), inputs.size(0))
+            # measure accuracy and record loss
+            prec1, prec5 = accuracy(outputs.data, targets.data, topk=(1, 5))
+            losses.update(loss.item(), inputs.size(0))
+            top1.update(prec1.item(), inputs.size(0))
+            top5.update(prec5.item(), inputs.size(0))
 
-        # measure elapsed time
-        batch_time.update(time.time() - end)
-        end = time.time()
+            # measure elapsed time
+            batch_time.update(time.time() - end)
+            end = time.time()
 
-        # plot progress
-        progress_str = 'Loss: %.3f | Acc: %.3f%% (%d/%d)'\
-            % (losses.avg, top1.avg, top1.sum, top1.count)
-        progress_bar(batch_idx, len(testloader), progress_str)
+            # plot progress
+            progress_str = 'Loss: %.3f | Acc: %.3f%% (%d/%d)'\
+                % (losses.avg, top1.avg, top1.sum, top1.count)
+            progress_bar(batch_idx, len(testloader), progress_str)
     track.metric(iteration=0, epoch=epoch,
                  avg_test_loss=losses.avg,
                  avg_test_acc=top1.avg)
@@ -142,7 +147,9 @@ def do_training(args):
     num_params = sum(p.numel() for p in model.parameters())
     track.metric(iteration=0, num_params=num_params)
 
-    optimizer = build_optimizer('SGD', params=model.parameters(), lr=args.lr)
+    optimizer = build_optimizer('SGD', params=model.parameters(), lr=args.lr,
+                                momentum=args.momentum,
+                                weight_decay=args.weight_decay)
 
     criterion = torch.nn.CrossEntropyLoss()
 
@@ -154,9 +161,12 @@ def do_training(args):
         train_loss, train_acc = train(trainloader, model, criterion,
                                       optimizer, epoch)
         test_loss, test_acc = test(testloader, model, criterion, epoch)
-        track.debug('Finished epoch %d... | train loss %.3f | train acc %.3f | test loss %.3f | test acc %.3f' % (epoch, train_loss, train_acc, test_loss, test_acc))
+        track.debug('Finished epoch %d... | train loss %.3f | train acc %.3f '
+                    '| test loss %.3f | test acc %.3f'
+                    % (epoch, train_loss, train_acc, test_loss, test_acc))
         # Save model
-        model_fname = os.path.join(track.trial_dir(), "model{}.ckpt".format(epoch))
+        model_fname = os.path.join(track.trial_dir(),
+                                   "model{}.ckpt".format(epoch))
         torch.save(model, model_fname)
         if test_acc > best_acc:
             best_acc = test_acc
