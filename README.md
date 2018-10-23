@@ -65,9 +65,9 @@ lr:
 
 I can test out all of these learning rates at the same time by running:
 
-`CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py config.yaml --self_host=4 resnet_cifar`
+`CUDA_VISIBLE_DEVICES=0,1 python train.py config.yaml --self_host=2 resnet_cifar`
 
-If I have more than 4 configurations, ray will handle job scheduling from the queue.
+Ray will handle scheduling all four jobs on the two devices using a queue.
 
 Logs (`track` records) will be stored in `<args.logroot>/<args.experimentname>`.
 See the `track` docs for how to access these records as DataFrames.
@@ -81,19 +81,10 @@ You can find an example of running a grid search for training a residual network
 
 I added a utility in `skeletor.proc` for converting all `track` trial records for an experiment into a single Pandas DataFrame. It can also pickle it.
 
-That means if I run an experiment like above called `resnet_cifar`, I can access all of the results for all the trials as a single DataFrame by calling `skeletor.proc.track.df('resnet_cifar')`.
+That means if I run an experiment like above called `resnet_cifar`, I can access all of the results for all the trials as a single DataFrame by calling `skeletor.proc.proj('resnet_cifar', './logs')`.
 
-## Help me out
+## Help me out / Things to Do
 
-I tried to erase boilerplate by adding basic experiment utilities as well as various models and dataloaders. I haven't added much yet. Feel free to port over other architectures and datasets into the repo via PRs.
-
-## Things to do
-
-Add capability to register custom models, dataset loaders, and optimizers with the `build_model`, `build_dataset`, and `build_optimizer` functions.
-
-Sometimes `track` doesn't install correctly from the `setup.py`. If this happens, just run `pip install --upgrade git+https://github.com/richardliaw/track.git@master#egg=track` first.
-`
-
-
+We have active [issues](https://github.com/noahgolmant/skeletor/issues)! Feel free to suggest new improvements or add PRs to contribute.
 
 [...](https://www.youtube.com/watch?v=g20_8-TPyTQ)

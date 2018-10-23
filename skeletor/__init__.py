@@ -1,4 +1,5 @@
 """Top-level structure for skeletor """
 name = 'skeletor-ml'
 
-from .launcher import supply_args, execute
+from . import proc
+from .launcher import supply_args, supply_postprocess, execute

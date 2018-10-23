@@ -4,6 +4,7 @@ This file orchestrates experiment launching
 """
 import argparse
 import os
+import pickle
 import shutil
 import sys
 import yaml
@@ -15,7 +16,11 @@ from ray.tune import register_trainable, run_experiments
 import track
 
 # This will hold the arguments for this program. Set in `supply_args`.
-parser = None
+_parser = None
+# This will be called after all experiments have run if it is set. See `supply_postprocess`.
+_postprocess_fn = None
+# If set to true in `supply_postporcess`, saves the track.Project object for the project.
+_save_proj = False
 
 
 def _add_default_args(parser):
@@ -158,6 +163,8 @@ def _cleanup_ray_experiments(args):
 
 def supply_args(argument_fn=None):
     """
+    ** This function must be called before `execute` **
+
     This function will call `argument_fn(parser)` where parser is the
     ArgumentParser for this python program. Certain default arguments
     related to resource allocation and logging are created first.
@@ -165,11 +172,32 @@ def supply_args(argument_fn=None):
 
     `argument_fn(parser)`: adds user-specific arguments to the argparser.
     """
-    global parser
-    parser = argparse.ArgumentParser(description='skeletor argument parser')
-    _add_default_args(parser)
+    global _parser
+    _parser = argparse.ArgumentParser(description='skeletor argument parser')
+    _add_default_args(_parser)
     if argument_fn:
-        argument_fn(parser)
+        argument_fn(_parser)
+
+
+def supply_postprocess(postprocess_fn=None, save_proj=False):
+    """
+    ** This function must be called before `execute` **
+
+    This schedules postprocessing analysis using the supplied `postprocess_fn(proj)`
+    function. `proj` is a track.Project object that contains the results for
+    the various experiments with the specified `args.experimentname`.
+
+    Postprocessing will be called after `_experiment` or after
+    `_cleanup_ray_experiments` depending on if ray was used or not.
+
+    `save_proj`: if True, this will create a pickle file containing the 
+    track.Project object generated for `args.experimentname`.
+    It will save to <logroot>/<experimentname>/<experimentname>.pkl
+    """
+    global _postprocess_fn
+    _postprocess_fn = postprocess_fn
+    global _save_proj
+    _save_proj = save_proj
 
 
 def execute(experiment_fn):
@@ -178,11 +206,35 @@ def execute(experiment_fn):
     If the config is set, it will use ray to launch all experiments
     in parallel.
     """
-    if not parser:
+    # Parse all arguments (default + user-supplied)
+    if not _parser:
         supply_args()
-    args = parser.parse_args()
+    args = _parser.parse_args()
+    # Launch ray if we need to.
     if args.config:
         _launch_ray_experiments(experiment_fn, args)
         _cleanup_ray_experiments(args)
+    # Launch a single experiment otherwise.
     else:
         _experiment(experiment_fn, args)
+    # Load resulting experiment data from Track
+    local = os.path.join(args.logroot, args.experimentname)
+    if args.s3:
+        track_remote_dir = os.path.join(args.s3,
+                                        args.projectname,
+                                        args.experimentname)
+    else:
+        track_remote_dir = None
+    proj = track.Project(local, track_remote_dir)
+    # Save project to a pickle in <logroot>/<experimentname>.
+    if _save_proj:
+        proj_fname = os.path.join(args.logroot, args.experimentname,
+                                  args.experimentname + '.pkl')
+        try:
+            with open(proj_fname, 'wb') as f:
+                pickle.dump(proj, f)
+        except Exception as e:
+            print('swallowing pickle error: {}'.format(e))
+    # Launch postprocessing code.
+    if _postprocess_fn:
+        _postprocess_fn(proj)
