@@ -110,7 +110,10 @@ def _launch_ray_experiments(experiment_fn, args):
         ray.init(num_cpus=args.self_host)
     else:
         ray.init(num_gpus=args.self_host)
-    register_trainable('ray_experiment', _ray_experiment)
+
+    def _real_ray_exp(config, status_reporter):
+        _ray_experiment(experiment_fn, args, config, status_reporter)
+    register_trainable('ray_experiment', _real_ray_exp)
 
     with open(args.config) as f:
         config = yaml.load(f)
@@ -129,9 +132,7 @@ def _launch_ray_experiments(experiment_fn, args):
     }
 
     try:
-        run_experiments(experiment_fn,
-                        args,
-                        experiment_setting,
+        run_experiments(experiment_setting,
                         server_port=int(args.server_port),
                         with_server=True)
     except ray.tune.error.TuneError as e:
