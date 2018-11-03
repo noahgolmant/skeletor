@@ -32,6 +32,7 @@ def add_module(name, override=True):
 
 
 def num_classes(name):
+    """ Gets the number of classes in specified dataset to create models """
     if name == 'cifar10':
         return 10
     elif name == 'cifar100':
@@ -40,10 +41,12 @@ def num_classes(name):
 
 
 def cifar10(**kwargs):
+    """ Loads the cifar10 dataset train and test loaders """
     return _cifar(True, **kwargs)
 
 
 def cifar100(**kwargs):
+    """ Loads the cifar100 dataset train and test loaders """
     return _cifar(False, **kwargs)
 
 
@@ -53,12 +56,14 @@ def _cifar(is_cifar10, dataroot, batch_size, eval_batch_size,
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        transforms.Normalize((0.4914, 0.4822, 0.4465),
+                             (0.2023, 0.1994, 0.2010)),
     ])
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        transforms.Normalize((0.4914, 0.4822, 0.4465),
+                             (0.2023, 0.1994, 0.2010)),
     ])
     if is_cifar10:
         dataloader = datasets.CIFAR10

@@ -2,11 +2,7 @@
 This file orchestrates experiment launching
 
 """
-import argparse
-import os
-import pickle
-import shutil
-import yaml
+from .utils import seed_all
 
 import ray
 ray.rllib = None
@@ -14,30 +10,47 @@ import ray.tune
 from ray.tune import register_trainable, run_experiments
 import track
 
-from .utils import seed_all
+import argparse
+import os
+import pickle
+import shutil
+import yaml
+
+
+class LaunchVar:
+    """ Global Variables Are Bad """
+    def __init__(self):
+        self.val = None
+        pass
+
+    def set(self, val):
+        """ Set the stinking value """
+        self.val = val
+
 
 # This will hold the arguments for this program. Set in `supply_args`.
-_parser = None
-# This will be called after all experiments have run if it is set. See `supply_postprocess`.
-_postprocess_fn = None
-# If set to true in `supply_postporcess`, saves the track.Project object for the project.
-_save_proj = False
+_parser = LaunchVar()
+# This will be called after all experiments have run if it is set.
+# See `supply_postprocess`.
+_postprocess_fn = LaunchVar()
+# If set to true in `supply_postporcess`, saves the track.Project.
+_save_proj = LaunchVar()
 
 
 def _add_default_args(parser):
     """
-    This function adds a suite of default arguments for the projec that 
+    This function adds a suite of default arguments for the project that
     should / must be specified by the program. Most of these can be left as
-    they are. Only experimentname has to be specified, and if config is 
-    specified, skeletor will launch a ray tune server to orchestrate the 
+    they are. Only experimentname has to be specified, and if config is
+    specified, skeletor will launch a ray tune server to orchestrate the
     experiments in parallel based on a tune YAML config.
     """
-    # Experiment arguments 
+    # Experiment arguments
     parser.add_argument('experimentname', type=str,
                         help='Name of the experiment to run')
     # Ray arguments
     parser.add_argument('--self_host', type=int, default=1,
-                        help='if > 0, create ray host with specified number of GPUs')
+                        help='if > 0, create ray host with specified # of GPUs')
     parser.add_argument('--cpu', action='store_true', help='use cpu only')
     parser.add_argument('--port', type=int, default=6379, help='ray port')
     parser.add_argument('--server_port', type=int, default=10000,
@@ -61,7 +74,7 @@ def _add_default_args(parser):
                         'experimentname. each such subdirectory contains all'
                         ' track records for the experiment.')
     parser.add_argument('--seed', default=1, type=int,
-                        help='random seed to supply to numpy, random, torch, etc.')
+                        help='random seed to supply to numpy, random, torch')
 
 
 def _experiment(experiment_fn, args):
@@ -85,9 +98,8 @@ def _experiment(experiment_fn, args):
         experiment_fn(args)
 
 
-def _compute_resources(args, config):
+def _compute_resources(args):
     cpu = 1 if args.self_host and args.cpu else 0
-    # TODO use batch size to fix this
     return {'cpu': cpu, 'gpu': args.devices_per_trial}
 
 
@@ -118,7 +130,7 @@ def _launch_ray_experiments(experiment_fn, args):
     with open(args.config) as f:
         config = yaml.load(f)
 
-    resources = _compute_resources(args, config)
+    resources = _compute_resources(args)
     experiment_setting = {
         args.experimentname: {
             'run': 'ray_experiment',
@@ -181,32 +193,30 @@ def supply_args(argument_fn=None):
 
     `argument_fn(parser)`: adds user-specific arguments to the argparser.
     """
-    global _parser
-    _parser = argparse.ArgumentParser(description='skeletor argument parser')
-    _add_default_args(_parser)
+    _parser.set(argparse.ArgumentParser(description='skeletor argument parser'))
+    _add_default_args(_parser.val)
     if argument_fn:
-        argument_fn(_parser)
+        argument_fn(_parser.val)
 
 
 def supply_postprocess(postprocess_fn=None, save_proj=False):
     """
     ** This function must be called before `execute` **
 
-    This schedules postprocessing analysis using the supplied `postprocess_fn(proj)`
-    function. `proj` is a track.Project object that contains the results for
-    the various experiments with the specified `args.experimentname`.
+    This schedules postprocessing analysis using the supplied
+    `postprocess_fn(proj)` function. `proj` is a track.Project object that
+    contains the results for the various experiments with
+    the specified `args.experimentname`.
 
     Postprocessing will be called after `_experiment` or after
     `_cleanup_ray_experiments` depending on if ray was used or not.
 
-    `save_proj`: if True, this will create a pickle file containing the 
+    `save_proj`: if True, this will create a pickle file containing the
     track.Project object generated for `args.experimentname`.
     It will save to <logroot>/<experimentname>/<experimentname>.pkl
     """
-    global _postprocess_fn
-    _postprocess_fn = postprocess_fn
-    global _save_proj
-    _save_proj = save_proj
+    _postprocess_fn.set(postprocess_fn)
+    _save_proj.set(save_proj)
 
 
 def execute(experiment_fn):
@@ -216,9 +226,9 @@ def execute(experiment_fn):
     in parallel.
     """
     # Parse all arguments (default + user-supplied)
-    if not _parser:
+    if not _parser.val:
         supply_args()
-    args = _parser.parse_args()
+    args = _parser.val.parse_args()
     # Launch ray if we need to.
     if args.config:
         _launch_ray_experiments(experiment_fn, args)
@@ -236,7 +246,7 @@ def execute(experiment_fn):
         track_remote_dir = None
     proj = track.Project(local, track_remote_dir)
     # Save project to a pickle in <logroot>/<experimentname>.
-    if _save_proj:
+    if _save_proj.val:
         proj_fname = os.path.join(args.logroot, args.experimentname,
                                   args.experimentname + '.pkl')
         try:
@@ -245,5 +255,5 @@ def execute(experiment_fn):
         except Exception as e:
             print('swallowing pickle error: {}'.format(e))
     # Launch postprocessing code.
-    if _postprocess_fn:
-        _postprocess_fn(proj)
+    if _postprocess_fn.val:
+        _postprocess_fn.val(proj)

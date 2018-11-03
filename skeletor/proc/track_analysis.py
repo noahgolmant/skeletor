@@ -1,20 +1,18 @@
 """ Simple tools for analyzing track results after experimentation. """
 import os
-import pickle
 import track
 import pandas as pd
-import argparse
 
 
-def df_from_proj(proj):
+def df_from_proj(track_proj):
     """
-    Gets a flattened dataframe with all trial results for the track.Project 'proj'
-    See track.Project for how to get this from a logroot directory.
+    Gets a flattened dataframe with all trial results for the track.Project
+    'proj'. See track.Project for how to get this from a logroot directory.
     """
     results = []
-    for _, trial in proj.ids.iterrows():
-        res = proj.results([trial['trial_id']])
-        for col in proj.ids.columns:
+    for _, trial in track_proj.ids.iterrows():
+        res = track_proj.results([trial['trial_id']])
+        for col in track_proj.ids.columns:
             # If the argument was a list (e.g. annealing schedule), have to
             # stringify it to assign it as a default val for all rows.
             if isinstance(trial[col], list):
@@ -38,7 +36,7 @@ def proj(experimentname=None, logroot=None, s3=None,
     """
     if not proj_dir:
         if experimentname:
-            assert logroot, "must supply logroot if you have an experiment name"
+            assert logroot, "must supply logroot with experiment name"
         proj_dir = os.path.join(logroot, experimentname)
-    proj = track.Project(proj_dir, s3)
-    return proj
+    track_proj = track.Project(proj_dir, s3)
+    return track_proj
