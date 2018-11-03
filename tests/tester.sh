@@ -42,7 +42,10 @@ main() {
     cmds+=("rm -rf ./logs/test_logs/*")
 
     cmds+=("python src/boilerplate.py")
+    cmds+=("python src/custom_defs.py")
     cmds+=("python ../examples/train.py --arch ResNet18 resnet_test --epochs 1 --batch_size 512")
+    cmds+=("python ../examples/train.py --arch ResNet18 --config test_conf.yaml --self_host=1 --cpu resnet_test")
+
 
     for cmd in "${cmds[@]}"; do
         box "${cmd}"

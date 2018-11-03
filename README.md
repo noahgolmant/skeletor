@@ -83,6 +83,22 @@ I added a utility in `skeletor.proc` for converting all `track` trial records fo
 
 That means if I run an experiment like above called `resnet_cifar`, I can access all of the results for all the trials as a single DataFrame by calling `skeletor.proc.proj('resnet_cifar', './logs')`.
 
+## Registering custom models, dataloaders, and optimizers
+
+Registering custom classes allows you to construct an instance of the specified class by calling `build_model`, `build_dataset`, or `build_optimizer` with the class string name. This is useful for hyperparameter searching because you can search over these choices directly by class name.
+
+I try to provide a simple interface for registering custom implementations with skeletor. For example, I can register a custom `Model` class by calling `skeletor.models.add_model(Model)`. This allows me to create models through `skeletor.models.build_model('Model')`. You can also register entire modules full of definitions at once. There are analogous functions `add_dataset, add_optimizer` for datasets and optimizers.
+
+```
+class MyNetwork(Module):
+    ...
+
+skeletor.models.add_model(MyNetwork)
+
+arch_name = 'MyNetwork'
+model = skeletor.models.build_model(arch_name)
+```
+
 ## Help me out / Things to Do
 
 We have active [issues](https://github.com/noahgolmant/skeletor/issues)! Feel free to suggest new improvements or add PRs to contribute.

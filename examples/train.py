@@ -8,7 +8,7 @@ import torch
 import track
 
 import skeletor
-from skeletor.dataset import build_dataset, num_classes
+from skeletor.datasets import build_dataset, num_classes
 from skeletor.models import build_model
 from skeletor.optimizers import build_optimizer
 from skeletor.utils import AverageMeter, accuracy, progress_bar

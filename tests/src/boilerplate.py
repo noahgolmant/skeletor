@@ -1,7 +1,7 @@
 """ This file tests that all the models in skeletor.models load correctly """
 from skeletor.models import build_model
 from skeletor.optimizers import build_optimizer
-from skeletor.dataset import build_dataset
+from skeletor.datasets import build_dataset
 
 models = [
     'ResNet18',

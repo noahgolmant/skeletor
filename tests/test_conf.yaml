@@ -1,0 +1,6 @@
+arch: ResNet18
+dataset: cifar10
+lr: 
+  grid_search: [0.1, 1.]
+batch_size: 16
+epochs: 0

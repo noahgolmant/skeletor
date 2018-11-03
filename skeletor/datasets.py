@@ -3,11 +3,32 @@ import os
 import torch.utils.data as data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+from skeletor.register import register_module, register_callable, build_callable
+
+_custom_datasets = {}  # what datasets have we already registered
+_custom_modules = set()  # what modules have we already imported from
+
 
 def build_dataset(name, **dataset_params):
-    assert name in globals().keys(),\
-        "%s must be a dataset in dataset.py"
-    return globals()[name](**dataset_params)
+    """
+    Builds dataset loader from the specified name and parameters.
+    The name must be one of the callable definition functions imported above
+    or defined below.
+
+    Why might you use this? The best use-case is enabling direct
+    dataset configuration through hyperparameters.
+    """
+    return build_callable(name, _custom_datasets,
+                          globals(), **dataset_params)
+
+
+def add_dataset(cls, override=True):
+    register_callable(cls, _custom_datasets, override=override)
+
+
+def add_module(name, override=True):
+    register_module(name, _custom_datasets, _custom_modules,
+                    override=override)
 
 
 def num_classes(name):
