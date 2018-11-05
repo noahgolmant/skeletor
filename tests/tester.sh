@@ -38,13 +38,13 @@ main() {
 
     cmds=()
     ### Begin to add commands here!
-    cmds+=("mkdir -p ./logs/test_logs")
-    cmds+=("rm -rf ./logs/test_logs/*")
+    cmds+=("mkdir -p ./tests/logs/")
+    cmds+=("rm -rf ./tests/logs/*")
 
-    cmds+=("python src/boilerplate.py")
-    cmds+=("python src/custom_defs.py")
-    cmds+=("python ../examples/train.py --arch ResNet18 resnet_test --epochs 1 --batch_size 512")
-    cmds+=("python ../examples/train.py --arch ResNet18 --config test_conf.yaml --self_host=1 --cpu resnet_test")
+    cmds+=("python tests/src/boilerplate.py")
+    cmds+=("python tests/src/custom_defs.py")
+    cmds+=("python ./examples/train.py --dataroot ./tests/data --logroot ./tests/logs/ --arch LeNet --epochs 1 --batch_size 32 resnet_test")
+    cmds+=("python ./examples/train.py --dataroot ./tests/data --logroot ./tests/logs/ --config ./tests/test_conf.yaml --cpu --self_host=1 resnet_test")
 
 
     for cmd in "${cmds[@]}"; do

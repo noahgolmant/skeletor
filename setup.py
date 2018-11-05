@@ -4,12 +4,9 @@ import setuptools
 install_requires = [
     'pyyaml>=3.12',
     'ray>=0.4.0',
-    'track',
+    'track-ml>=0.1',
+    'torchvision',
     'awscli',
-]
-
-dependency_links = [
-    'git+https://github.com/richardliaw/track.git'
 ]
 
 with open("README.md", "r") as fh:
@@ -25,5 +22,4 @@ setuptools.setup(name="skeletor-ml",
                  url="https://github.com/noahgolmant/skeletor",
                  license='MIT License',
                  packages=setuptools.find_packages(),
-                 install_requires=install_requires,
-                 dependency_links=dependency_links)
+                 install_requires=install_requires)

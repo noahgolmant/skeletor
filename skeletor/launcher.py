@@ -100,7 +100,8 @@ def _experiment(experiment_fn, args):
 
 def _compute_resources(args):
     cpu = 1 if args.self_host and args.cpu else 0
-    return {'cpu': cpu, 'gpu': args.devices_per_trial}
+    gpu = 0 if args.cpu else min(args.devices_per_trial, args.self_host)
+    return {'cpu': cpu, 'gpu': gpu}
 
 
 def _ray_experiment(experiment_fn, args, config, status_reporter):
@@ -119,7 +120,7 @@ def _launch_ray_experiments(experiment_fn, args):
     Schedule all the trials and start them all.
     """
     if args.cpu:
-        ray.init(num_cpus=args.self_host)
+        ray.init(num_cpus=args.self_host, num_gpus=0)
     else:
         ray.init(num_gpus=args.self_host)
 
@@ -158,6 +159,7 @@ def _cleanup_ray_experiments(args):
     """
     track_local_dir = os.path.join(args.logroot, args.experimentname)
     os.makedirs(track_local_dir, exist_ok=True)
+    os.makedirs('raydata', exist_ok=True)  # just in case we did nothing
     for experiment in os.listdir('raydata'):
         if experiment != args.experimentname:
             continue

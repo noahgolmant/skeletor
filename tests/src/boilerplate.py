@@ -40,7 +40,7 @@ def test_datasets():
     print("Testing datasets")
     for name in datasets:
         trainloader, testloader = build_dataset(name,
-                                                dataroot='./data/',
+                                                dataroot='./tests/data/',
                                                 batch_size=128,
                                                 eval_batch_size=100,
                                                 num_workers=1)

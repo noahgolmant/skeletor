@@ -1,6 +1,6 @@
-arch: ResNet18
+arch: LeNet
 dataset: cifar10
 lr: 
   grid_search: [0.1, 1.]
-batch_size: 16
+batch_size: 32
 epochs: 0

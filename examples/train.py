@@ -3,7 +3,6 @@
 import os
 import time
 
-import pandas as pd
 import torch
 import track
 
@@ -30,6 +29,8 @@ def add_train_args(parser):
                         help='SGD momentum')
     parser.add_argument('--weight_decay', default=5e-4, type=float,
                         help='SGD weight decay')
+    parser.add_argument('--cuda', action='store_true',
+                        help='if true, use GPU!')
 
 
 def adjust_learning_rate(epoch, optimizer, lr, schedule, decay):
@@ -42,7 +43,7 @@ def adjust_learning_rate(epoch, optimizer, lr, schedule, decay):
     return new_lr
 
 
-def train(trainloader, model, criterion, optimizer, epoch):
+def train(trainloader, model, criterion, optimizer, epoch, cuda=False):
     # switch to train mode
     model.train()
 
@@ -57,7 +58,8 @@ def train(trainloader, model, criterion, optimizer, epoch):
         # measure data loading time
         data_time.update(time.time() - end)
 
-        inputs, targets = inputs.cuda(), targets.cuda(async=True)
+        if cuda:
+            inputs, targets = inputs.cuda(), targets.cuda(async=True)
 
         # compute output
         outputs = model(inputs)
@@ -92,7 +94,7 @@ def train(trainloader, model, criterion, optimizer, epoch):
     return (losses.avg, top1.avg)
 
 
-def test(testloader, model, criterion, epoch):
+def test(testloader, model, criterion, epoch, cuda=False):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
@@ -108,7 +110,8 @@ def test(testloader, model, criterion, epoch):
             # measure data loading time
             data_time.update(time.time() - end)
 
-            inputs, targets = inputs.cuda(), targets.cuda()
+            if cuda:
+                inputs, targets = inputs.cuda(), targets.cuda()
             inputs = torch.autograd.Variable(inputs, volatile=True)
             targets = torch.autograd.Variable(targets, volatile=True)
 
@@ -143,7 +146,8 @@ def do_training(args):
                                             eval_batch_size=args.eval_batch_size,
                                             num_workers=2)
     model = build_model(args.arch, num_classes=num_classes(args.dataset))
-    model = torch.nn.DataParallel(model).cuda()
+    if args.cuda:
+        model = torch.nn.DataParallel(model).cuda()
 
     # Calculate total number of model parameters
     num_params = sum(p.numel() for p in model.parameters())
@@ -161,8 +165,9 @@ def do_training(args):
         args.lr = adjust_learning_rate(epoch, optimizer, args.lr, args.schedule,
                                        args.gamma)
         train_loss, train_acc = train(trainloader, model, criterion,
-                                      optimizer, epoch)
-        test_loss, test_acc = test(testloader, model, criterion, epoch)
+                                      optimizer, epoch, args.cuda)
+        test_loss, test_acc = test(testloader, model, criterion, epoch,
+                                   args.cuda)
         track.debug('Finished epoch %d... | train loss %.3f | train acc %.3f '
                     '| test loss %.3f | test acc %.3f'
                     % (epoch, train_loss, train_acc, test_loss, test_acc))
