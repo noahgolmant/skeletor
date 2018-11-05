@@ -6,7 +6,7 @@ You can install it with: `pip install skeletor-ml`
 
 ## Why use skeletor?
 
-Tracking and analyzing experiment results is easy. Skeletor uses [track](https://github.com/richardliaw/track), which provides a simple interface to log metrics throughout training and to view those metrics in a pandas DataFrame afterwards. It can log locally and to S3. Compared to other logging tools, track has minimal overhead and a ridiculously simple interface. No longer do you need to decorate every function or specify a convoluted experiment pipeline.
+Tracking and analyzing experiment results is easy. Skeletor uses [track](https://github.com/richardliaw/track), which provides a simple interface to log metrics throughout training and to view those metrics in a pandas DataFrame afterwards. It can log locally and to S3. Compared to other logging tools, track has minimal overhead and a very simple interface. No longer do you need to decorate every function or specify a convoluted experiment pipeline.
 
 Orchestrating many experiments in parallel is simple and robust. Almost every experiment tracking framework implements its own scheduling and hyperparameter search algorithms. Luckily, I don't trust myself to do this correctly. Instead, skeletor uses [ray](https://github.com/ray-project/ray), a high-performance distributed execution framework. In particular, it uses [ray tune](https://ray.readthedocs.io/en/latest/tune.html) for scalable hyperparameter search. 
 
@@ -64,7 +64,7 @@ Internally, the basic experiment flow is:
 
 ## Launching experiments
 
-To launch a single experiment, you can do something like
+To launch an experiment in `train.py`, you just do `python train.py <my args> <experimentname>`. The results will go in `<logroot>/<experimentname>`. For example, you can do something like
 
 `CUDA_VISIBLE_DEVICES=0 python train.py --arch ResNet50 --lr .1 resnet_cifar`
 
