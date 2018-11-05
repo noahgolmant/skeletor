@@ -184,9 +184,10 @@ def do_training(args):
 
 def postprocess(proj):
     df = skeletor.proc.df_from_proj(proj)
-    best_trial = df.ix[df['avg_test_acc'].idxmax()]
-    print("Trial with top accuracy:")
-    print(best_trial)
+    if 'avg_test_acc' in df.columns:
+        best_trial = df.ix[df['avg_test_acc'].idxmax()]
+        print("Trial with top accuracy:")
+        print(best_trial)
 
 
 if __name__ == '__main__':

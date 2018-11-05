@@ -44,7 +44,7 @@ main() {
     cmds+=("python tests/src/boilerplate.py")
     cmds+=("python tests/src/custom_defs.py")
     cmds+=("python ./examples/train.py --dataroot ./tests/data --logroot ./tests/logs/ --arch LeNet --epochs 1 --batch_size 32 resnet_test")
-    cmds+=("python ./examples/train.py --dataroot ./tests/data --logroot ./tests/logs/ --config ./tests/test_conf.yaml --cpu --self_host=1 resnet_test")
+    cmds+=("python ./examples/train.py --dataroot ./tests/data --config ./tests/test_conf.yaml --cpu --self_host=1 resnet_test")
 
 
     for cmd in "${cmds[@]}"; do
