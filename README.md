@@ -17,19 +17,7 @@ Just run `pip install skeletor-ml` to get started.
 
 ## Basic Usage
 
-You just have to supply two functions to skeletor that wrap around your existing argument parsing and training code:
-
-`skeletor.supply_args(add_args)` takes in a user-defined function of the form `add_args(parser)`. This takes in an `ArgumentParser` object so you can supply your own arguments to the project.
-
-`skeletor.execute(experiment_fn)` takes in a user-defined function of the form `experiment_fn(args)`. This runs your training code with the specified arguments.
-
-You can supply a third function to run analysis after training. `skeletor.supply_postprocess(postprocess_fn)` takes in a user-defined function of the form `postprocess_fn(proj)`. This gives you a `track.Project` object to analyze the experiment results after training.
-
-Internally, the basic experiment flow is:
-
-`run add_args(parser) -> parse the args -> run experiment_fn(args) -> optionally run postprocess_fn(proj)`
-
-You can use `track` to log statistics during training. A basic example `train.py` might look like:
+A basic example `train.py` might look like:
 
 ```
 import skeletor
@@ -65,6 +53,14 @@ def experiment(args):
 skeletor.supply_args(add_args)
 skeletor.execute(experiment)
 ```
+
+You just have to supply (1) a function that adds your desired arguments to an `ArgumentParser` object, and (2) a function that runs the experiment using the parsed arguments. You can then use `track` to log statistics during training.
+
+You can supply a third function to run analysis after training. `skeletor.supply_postprocess(postprocess_fn)` takes in a user-defined function of the form `postprocess_fn(proj)`. `proj` is a `track.Project` object.
+
+Internally, the basic experiment flow is:
+
+`run add_args(parser) -> parse the args -> run experiment_fn(args) -> optionally run postprocess_fn(proj)`
 
 ## Launching experiments
 
