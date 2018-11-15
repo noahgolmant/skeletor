@@ -3,14 +3,13 @@ import collections
 import hashlib
 import numpy as np
 import os
+import shutil
 import sys
 import time
 
 TOTAL_BAR_LENGTH = 65.
 
-_, term_width = os.popen('stty size', 'r').read().split()
-term_width = int(term_width)
-
+term_width = shutil.get_terminal_size().columns
 
 def _next_seeds(n):
     # deterministically generate seeds for envs
