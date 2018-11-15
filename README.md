@@ -79,7 +79,7 @@ lr:
 
 I can test out all of these learning rates at the same time by running:
 
-`CUDA_VISIBLE_DEVICES=0,1 python train.py config.yaml --self_host=2 resnet_cifar`
+`CUDA_VISIBLE_DEVICES=0,1 python train.py --config=config.yaml --self_host=2 resnet_cifar`
 
 Ray will handle scheduling the jobs across all available resources.
 
