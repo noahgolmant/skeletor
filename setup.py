@@ -13,7 +13,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(name="skeletor-ml",
-                 version="0.1.3",
+                 version="0.1.4",
                  author="Noah Golmant",
                  author_email="noah.golmant@gmail.com",
                  description="A lightweight module for research experiment reproducibility and analysis",
