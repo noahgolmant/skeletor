@@ -181,3 +181,14 @@ class RollingAverageWindow:
     def value(self):
         """returns the current windowed avg"""
         return self._total / len(self._items)
+
+
+class Params:
+    """
+    This just lets me create params with named arguments because I hate
+    typing strings wrong
+
+    TODO: Would probably be better to create a factory for these...
+    """
+    def __init__(self, **kwargs):
+        self.args = kwargs

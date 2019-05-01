@@ -8,6 +8,7 @@ Why should you even use this instead of just building a model yourself?
 - You can proceed to select architectures via arguments (good for grid search!)
 """
 from skeletor.register import register_module, register_callable, build_callable
+import skeletor.datasets
 
 
 _custom_models = {}  # what models have we already registered
@@ -23,6 +24,10 @@ def build_model(name, **model_params):
     Why might you use this? The best use-case is enabling direct
     model configuration through hyperparameters.
     """
+    if 'dataset' in model_params.keys():
+        dataset_params = skeletor.datasets.params(model_params['dataset'])
+        model_params.update(dataset_params)
+        del model_params['dataset']
     return build_callable(name, _custom_models, globals(), **model_params)
 
 

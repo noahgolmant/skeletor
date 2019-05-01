@@ -145,7 +145,7 @@ def do_training(args):
                                             batch_size=args.batch_size,
                                             eval_batch_size=args.eval_batch_size,
                                             num_workers=2)
-    model = build_model(args.arch, num_classes=num_classes(args.dataset))
+    model = build_model(args.arch, dataset=args.dataset)
     if args.cuda:
         model = torch.nn.DataParallel(model).cuda()
 

@@ -1,15 +1,31 @@
-""" Get train and test loaders for various datasets """
+""" Get train and test laaders for various datasets """
 import os
 import torch.utils.data as data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from skeletor.register import register_module, register_callable, build_callable
+from skeletor.utils import Params
 
 _custom_datasets = {}  # what datasets have we already registered
 _custom_modules = set()  # what modules have we already imported from
 
 
-def build_dataset(name, **dataset_params):
+# DATASET PARAMS
+# These provide auxiliary information to other modules that need it
+# e.g. when the convnet input channels depends on the image dimensions
+_DATASET_PARAMS = {
+    'mnist': Params(num_classes=10, in_channels=1, width=28, height=28),
+    'svhn': Params(num_classes=10, in_channels=3, width=32, height=32),
+    'cifar10': Params(num_classes=10, in_channels=3, width=32, height=32),
+    'cifar100': Params(num_classes=100, in_channels=3, width=32, height=32)
+}
+
+
+def params(dataset_name):
+    return _DATASET_PARAMS[dataset_name].args
+
+
+def build_dataset(name, **extra_params):
     """
     Builds dataset loader from the specified name and parameters.
     The name must be one of the callable definition functions imported above
@@ -19,7 +35,7 @@ def build_dataset(name, **dataset_params):
     dataset configuration through hyperparameters.
     """
     return build_callable(name, _custom_datasets,
-                          globals(), **dataset_params)
+                          globals(), **extra_params)
 
 
 def add_dataset(cls, override=True):
