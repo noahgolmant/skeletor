@@ -81,3 +81,48 @@ def _cifar(is_cifar10, dataroot, batch_size, eval_batch_size,
     testloader = data.DataLoader(testset, batch_size=eval_batch_size,
                                  shuffle=False, num_workers=num_workers)
     return trainloader, testloader
+
+
+def svhn(dataroot, batch_size, eval_batch_size, num_workers=2):
+    """" train, test, num_classes for svhn house digits classification """
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((.5, .5, .5), (.5, .5, .5))
+    ])
+
+    trainset = datasets.SVHN(root=dataroot, split='train',
+                             download=True, transform=transform)
+    testset = datasets.SVHN(root=dataroot, split='test',
+                            download=True, transform=transform)
+
+    trainloader = data.DataLoader(trainset,
+                                  batch_size=batch_size,
+                                  shuffle=True,
+                                  num_workers=num_workers)
+    testloader = data.DataLoader(testset,
+                                 batch_size=eval_batch_size,
+                                 shuffle=True,
+                                 num_workers=num_workers)
+    return trainloader, testloader
+
+
+def mnist(dataroot, batch_size, eval_batch_size, num_workers=2):
+    """returns train, test, num_classes for MNIST"""
+    # per https://github.com/pytorch/examples/blob/master/mnist
+    transform = transforms.Compose([transforms.ToTensor(),
+                                    transforms.Normalize(
+                                        (0.1307,), (0.3081,))])
+    trainset = datasets.MNIST(dataroot, train=True,
+                              download=True, transform=transform)
+    testset = datasets.MNIST(dataroot, train=False,
+                             download=True, transform=transform)
+
+    trainloader = data.DataLoader(trainset,
+                                  batch_size=batch_size,
+                                  shuffle=True,
+                                  num_workers=num_workers)
+    testloader = data.DataLoader(testset,
+                                 batch_size=eval_batch_size,
+                                 shuffle=True,
+                                 num_workers=num_workers)
+    return trainloader, testloader
