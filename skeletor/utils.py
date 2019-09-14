@@ -1,15 +1,15 @@
 """ Various utils for random seeding, progress, and metric tracking """
 import collections
 import hashlib
-import numpy as np
-import os
 import shutil
 import sys
 import time
+import numpy as np
 
 TOTAL_BAR_LENGTH = 65.
 
 term_width = shutil.get_terminal_size().columns
+
 
 def _next_seeds(n):
     # deterministically generate seeds for envs
@@ -28,22 +28,19 @@ def _next_seeds(n):
     return seeds
 
 
-def seed_all(seed, numpy=True, random=True, torch=True):
+def seed_all(seed, numpy=True, random=True):
     """Seed all devices deterministically off of seed and somewhat
     independently."""
     if numpy:
         np.random.seed(seed)
-    rand_seed, torch_cpu_seed, torch_gpu_seed = _next_seeds(3)
+    rand_seed = _next_seeds(1)[0]
     if random:
         import random
         random.seed(rand_seed)
-    if torch:
-        import torch
-        torch.manual_seed(torch_cpu_seed)
-        torch.cuda.manual_seed_all(torch_gpu_seed)
 
 
 def format_time(seconds):
+    """ converts seconds into day-hour-minute-second-ms string format """
     days = int(seconds / 3600/24)
     seconds = seconds - days*3600*24
     hours = int(seconds / 3600)
@@ -81,7 +78,10 @@ begin_time = last_time
 
 
 def progress_bar(current, total, msg=None):
-    global last_time, begin_time
+    """ handy utility to display an updating progress bar...
+    percentage completed is computed as current/total
+    """
+    global last_time, begin_time  # pylint: disable=global-statement
     if current == 0:
         begin_time = time.time()  # Reset for new bar.
 
@@ -89,10 +89,10 @@ def progress_bar(current, total, msg=None):
     rest_len = int(TOTAL_BAR_LENGTH - cur_len) - 1
 
     sys.stdout.write(' [')
-    for i in range(cur_len):
+    for _ in range(cur_len):
         sys.stdout.write('=')
     sys.stdout.write('>')
-    for i in range(rest_len):
+    for _ in range(rest_len):
         sys.stdout.write('.')
     sys.stdout.write(']')
 
@@ -109,11 +109,11 @@ def progress_bar(current, total, msg=None):
 
     msg = ''.join(L)
     sys.stdout.write(msg)
-    for i in range(term_width-int(TOTAL_BAR_LENGTH)-len(msg)-3):
+    for _ in range(term_width-int(TOTAL_BAR_LENGTH)-len(msg)-3):
         sys.stdout.write(' ')
 
     # Go back to the center of the bar.
-    for i in range(term_width-int(TOTAL_BAR_LENGTH/2)+2):
+    for _ in range(term_width-int(TOTAL_BAR_LENGTH/2)+2):
         sys.stdout.write('\b')
     sys.stdout.write(' %d/%d ' % (current+1, total))
 
@@ -146,15 +146,18 @@ class AverageMeter(object):
            https://github.com/pytorch/examples/blob/master/imagenet/main.py
     """
     def __init__(self):
+        self.val = self.avg = self.sum = self.count = 0
         self.reset()
 
     def reset(self):
+        """ clear out all stored data """
         self.val = 0
         self.avg = 0
         self.sum = 0
         self.count = 0
 
     def update(self, val, n=1):
+        """ adds 'val' to the running average 'n' times """
         self.val = val
         self.sum += val * n
         self.count += n

@@ -1,6 +1,0 @@
-arch: LeNet
-dataset: cifar10
-lr: 
-  grid_search: [0.1, 1.]
-batch_size: 32
-epochs: 0

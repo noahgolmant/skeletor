@@ -2,26 +2,25 @@
 This file orchestrates experiment launching
 
 """
-from .utils import seed_all
-
-import ray
-ray.rllib = None
-import ray.tune
-from ray.tune import register_trainable, run_experiments
-import track
-
 import argparse
 import os
 import pickle
 import shutil
 import yaml
 
+import ray
+import ray.tune
+from ray.tune import register_trainable, run_experiments
+import track
+
+from skeletor.utils import seed_all
+from skeletor.error import SkeletorException
+
 
 class LaunchVar:
     """ Global Variables Are Bad """
     def __init__(self):
         self.val = None
-        pass
 
     def set(self, val):
         """ Set the stinking value """
@@ -50,7 +49,7 @@ def _add_default_args(parser):
                         help='Name of the experiment to run')
     # Ray arguments
     parser.add_argument('--self_host', type=int, default=1,
-                        help='if > 0, create ray host with specified # of GPUs')
+                        help='if >0, create ray host with specified # of GPUs')
     parser.add_argument('--cpu', action='store_true', help='use cpu only')
     parser.add_argument('--port', type=int, default=6379, help='ray port')
     parser.add_argument('--server_port', type=int, default=10000,
@@ -177,7 +176,8 @@ def _cleanup_ray_experiments(args):
                 if os.path.isdir(new_dst):
                     ray_trial_dir = os.path.join(rundir, f)
                     for trial_data in os.listdir(ray_trial_dir):
-                        ray_trial_data = os.path.join(ray_trial_dir, trial_data)
+                        ray_trial_data = os.path.join(ray_trial_dir,
+                                                      trial_data)
                         new_trial_data = os.path.join(new_dst, trial_data)
                         shutil.move(ray_trial_data, new_trial_data)
                 else:
@@ -195,7 +195,7 @@ def supply_args(argument_fn=None):
 
     `argument_fn(parser)`: adds user-specific arguments to the argparser.
     """
-    _parser.set(argparse.ArgumentParser(description='skeletor argument parser'))
+    _parser.set(argparse.ArgumentParser(description='skeletor arg parser'))
     _add_default_args(_parser.val)
     if argument_fn:
         argument_fn(_parser.val)
@@ -254,7 +254,7 @@ def execute(experiment_fn):
         try:
             with open(proj_fname, 'wb') as f:
                 pickle.dump(proj, f)
-        except Exception as e:
+        except SkeletorException as e:
             print('swallowing pickle error: {}'.format(e))
     # Launch postprocessing code.
     if _postprocess_fn.val:

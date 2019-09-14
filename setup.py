@@ -5,7 +5,6 @@ install_requires = [
     'pyyaml>=3.12',
     'ray>=0.4.0',
     'track-ml>=0.1',
-    'torchvision',
     'awscli',
 ]
 
